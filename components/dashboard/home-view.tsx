@@ -2,6 +2,7 @@ import { HomeLiquidAssets } from "./home-liquid-assets"
 import { HomeMonthlyFlow } from "./home-monthly-flow"
 import { HomeSavingsRate } from "./home-savings-rate"
 import { HomeMilestone } from "./home-milestone"
+import { HomeLineChart } from "./home-line-chart"
 import { Card, CardContent } from "@/components/ui/card"
 import { FileText, ArrowRight, ShoppingBag, Coffee, Laptop, Receipt } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
@@ -18,13 +19,18 @@ interface HomeViewProps {
 
 export function HomeView({ stats }: HomeViewProps) {
   return (
-    <div className="flex flex-col gap-10 p-6 md:p-10 w-full max-w-4xl mx-auto pb-24 md:pb-10">
-      <header className="flex flex-col gap-1">
-        <HomeLiquidAssets 
-          totalBalance={stats.totalBalance} 
-          currency={stats.currency} 
-          changePercentage={12}
-        />
+    <div className="flex flex-col gap-10 p-6 md:p-10 w-full max-w-4xl mx-auto pb-24 md:pb-10 bg-black">
+      <header className="flex flex-col gap-2">
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Total Balance</span>
+        <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-white leading-none">
+          {formatCurrency(stats.totalBalance, stats.currency)}
+        </h1>
+        <div className="flex items-center gap-2 mt-2">
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">+12.4% vs last month</span>
+        </div>
+        
+        <HomeLineChart />
       </header>
 
       {/* Monthly Flow Section */}

@@ -5,9 +5,8 @@ const config: CapacitorConfig = {
   appName: 'FinFlow',
   webDir: 'out',
   server: {
-    // 🚩 REPLACE_URL: Use your hosted web address here (e.g. https://finflow.vercel.app)
-    url: 'http://localhost:7331', 
-    cleartext: true, // 🚨 SET TO FALSE for production HTTPS
+    url: 'https://finflow-app-ten.vercel.app/', 
+    cleartext: false, 
     androidScheme: 'https'
   },
   plugins: {

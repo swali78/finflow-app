@@ -3,7 +3,7 @@ import { z } from "zod"
 const envSchema = z.object({
   BASE_URL: z.string().url().default("http://localhost:7331"),
   PORT: z.string().default("7331"),
-  SELF_HOSTED_MODE: z.enum(["true", "false"]).default("true"),
+  SELF_HOSTED_MODE: z.enum(["true", "false"]).default("false"),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL_NAME: z.string().default("gpt-4o-mini"),
   GOOGLE_API_KEY: z.string().optional(),
@@ -63,7 +63,7 @@ const config = {
   auth: {
     secret: env.BETTER_AUTH_SECRET,
     loginUrl: "/enter",
-    disableSignup: env.DISABLE_SIGNUP === "true" || env.SELF_HOSTED_MODE === "true",
+    disableSignup: env.DISABLE_SIGNUP === "true",
   },
   stripe: {
     secretKey: env.STRIPE_SECRET_KEY,

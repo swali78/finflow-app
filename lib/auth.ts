@@ -65,27 +65,12 @@ export const auth = betterAuth({
 })
 
 export async function getSession() {
-  if (config.selfHosted.isEnabled) {
-    const user = await getSelfHostedUser()
-    return user ? { user } : null
-  }
-
   return await auth.api.getSession({
     headers: await headers(),
   })
 }
 
 export async function getCurrentUser(): Promise<User> {
-  if (config.selfHosted.isEnabled) {
-    const user = await getSelfHostedUser()
-    if (user) {
-      return user
-    } else {
-      redirect(config.selfHosted.redirectUrl)
-    }
-  }
-
-  // Try to return user from session
   const session = await getSession()
   if (session && session.user) {
     const user = await getUserById(session.user.id)
@@ -99,15 +84,9 @@ export async function getCurrentUser(): Promise<User> {
 }
 
 export function isSubscriptionExpired(user: User) {
-  if (config.selfHosted.isEnabled) {
-    return false
-  }
   return user.membershipExpiresAt && user.membershipExpiresAt < new Date()
 }
 
 export function isAiBalanceExhausted(user: User) {
-  if (config.selfHosted.isEnabled || user.membershipPlan === SELF_HOSTED_USER.membershipPlan) {
-    return false
-  }
   return user.aiBalance <= 0
 }

@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth"
 import { getCategories } from "@/models/categories"
 import { getCurrencies } from "@/models/currencies"
 import { getSettings } from "@/models/settings"
+import { SignOutButton } from "@/components/settings/sign-out-button"
 
 export default async function SettingsPage() {
   const user = await getCurrentUser()
@@ -12,8 +13,9 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-2xl px-6 md:px-0">
         <GlobalSettingsForm settings={settings} currencies={currencies} categories={categories} />
+        <SignOutButton />
       </div>
     </>
   )
