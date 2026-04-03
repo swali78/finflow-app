@@ -19,8 +19,9 @@ export default function EnterPage() {
     setIsLoading(true)
 
     try {
-      const { error } = await authClient.signIn.emailOtp({
+      const { error } = await authClient.emailOtp.sendVerificationOtp({
         email,
+        type: "sign-in",
       })
 
       if (error) {
