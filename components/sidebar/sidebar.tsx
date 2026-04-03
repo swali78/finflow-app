@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sidebar"
 import { UserProfile } from "@/lib/auth"
 import config from "@/lib/config"
-import { ClockArrowUp, FileText, Gift, House, Import, LayoutDashboard, Settings, Upload } from "lucide-react"
+import { FileText, Gift, House, Import, LayoutDashboard, Settings, TrendingUp, Upload } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -50,11 +50,17 @@ export function AppSidebar({
     <>
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
-          <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo/256.png" alt="Logo" className="h-10 w-10 rounded-lg" width={40} height={40} />
-            <div className="grid flex-1 text-left leading-tight">
-              <span className="truncate font-semibold text-lg">
-                <ColoredText>{config.app.title}</ColoredText>
+          <Link href="/" className="flex items-center gap-3 px-2 py-4">
+            <Image 
+              src="/logo.png" 
+              alt="FinFlow Official Logo" 
+              className="h-9 w-9 rounded-xl border border-white/10 shadow-2xl" 
+              width={36} 
+              height={36} 
+            />
+            <div className="grid flex-1 text-left leading-none">
+              <span className="text-xl font-black italic tracking-tighter uppercase text-white">
+                FinFlow
               </span>
             </div>
           </Link>
@@ -78,42 +84,33 @@ export function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItemWithHighlight>
 
-                <SidebarMenuItemWithHighlight href="/transactions">
+                <SidebarMenuItemWithHighlight href="/dashboard?view=charts">
                   <SidebarMenuButton asChild>
-                    <Link href="/transactions">
-                      <FileText />
-                      <span>Transactions</span>
-                      {notification && notification.code === "sidebar.transactions" && notification.message && (
-                        <Blinker />
-                      )}
-                      <span></span>
+                    <Link href="/dashboard?view=charts">
+                      <LayoutDashboard />
+                      <span>Dashboard</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItemWithHighlight>
 
-                <SidebarMenuItemWithHighlight href="/unsorted">
+                <SidebarMenuItemWithHighlight href="/transactions">
                   <SidebarMenuButton asChild>
-                    <Link href="/unsorted">
-                      <ClockArrowUp />
-                      <span>Unsorted</span>
-                      {unsortedFilesCount > 0 && (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                          {unsortedFilesCount}
-                        </span>
-                      )}
-                      {notification && notification.code === "sidebar.unsorted" && notification.message && <Blinker />}
-                      <span></span>
+                    <Link href="/transactions">
+                      <FileText />
+                      <span>Ledger</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItemWithHighlight>
-                <SidebarMenuItemWithHighlight href="/apps">
+
+                <SidebarMenuItemWithHighlight href="/insights">
                   <SidebarMenuButton asChild>
-                    <Link href="/apps">
-                      <LayoutDashboard />
-                      <span>Apps</span>
+                    <Link href="/insights">
+                      <TrendingUp />
+                      <span>Insights</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItemWithHighlight>
+
                 <SidebarMenuItemWithHighlight href="/settings">
                   <SidebarMenuButton asChild>
                     <Link href="/settings">

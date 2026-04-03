@@ -10,12 +10,12 @@ export default function MobileMenu({ unsortedFilesCount }: { unsortedFilesCount:
 
   return (
     <menu className="flex flex-row gap-2 p-2 items-center justify-between fixed top-0 left-0 w-full z-50 border-b-2 border-solid bg-background md:hidden">
-      <Avatar className="h-10 w-10 rounded-lg cursor-pointer" onClick={toggleSidebar}>
-        <AvatarImage src="/logo/256.png" />
-        <AvatarFallback className="rounded-lg">AI</AvatarFallback>
+      <Avatar className="h-10 w-10 rounded-lg cursor-pointer border border-white/10" onClick={toggleSidebar}>
+        <AvatarImage src="/logo.png" />
+        <AvatarFallback className="rounded-lg bg-black text-white px-2 uppercase font-black tracking-tighter">FF</AvatarFallback>
       </Avatar>
-      <Link href="/" className="text-lg font-bold">
-        {config.app.title}
+      <Link href="/" className="text-xl font-black italic tracking-tighter uppercase text-white">
+        FinFlow
       </Link>
       <Link
         href="/unsorted"

@@ -50,85 +50,73 @@ export default function TransactionCreateForm({
   }, [createState, router])
 
   return (
-    <form action={createAction} className="space-y-4">
-      <FormInput title="Name" name="name" defaultValue={formData.name} />
-
-      <FormInput title="Merchant" name="merchant" defaultValue={formData.merchant} />
-
-      <FormInput title="Description" name="description" defaultValue={formData.description} />
-
-      <div className="flex flex-row gap-4">
-        <FormInput title="Total" type="number" step="0.01" name="total" defaultValue={formData.total.toFixed(2)} />
-
-        <FormSelectCurrency
-          title="Currency"
-          name="currencyCode"
-          currencies={currencies}
-          placeholder="Select Currency"
-          value={formData.currencyCode}
-          onValueChange={(value) => {
-            setFormData({ ...formData, currencyCode: value })
-          }}
-        />
-
-        <FormSelectType title="Type" name="type" defaultValue={formData.type} />
-      </div>
-
-      {formData.currencyCode !== settings.default_currency ? (
-        <div className="flex flex-row gap-4">
-          <FormInput
-            title={`Converted to ${settings.default_currency}`}
+    <form action={createAction} className="space-y-8 py-4">
+      {/* Primary Amount Input */}
+      <div className="flex flex-col items-center gap-2">
+        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Amount</label>
+        <div className="flex items-center gap-3">
+          <span className="text-4xl font-bold text-muted-foreground">{formData.currencyCode}</span>
+          <input
+            name="total"
             type="number"
             step="0.01"
-            name="convertedTotal"
-            defaultValue={formData.convertedTotal.toFixed(2)}
+            defaultValue={formData.total.toFixed(2)}
+            className="bg-transparent text-6xl font-bold tracking-tighter outline-none w-full max-w-[250px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            autoFocus
           />
         </div>
-      ) : (
-        <></>
-      )}
-
-      <div className="flex flex-row flex-grow gap-4">
-        <FormInput title="Issued At" type="date" name="issuedAt" defaultValue={formData.issuedAt} />
       </div>
 
-      <div className="flex flex-row gap-4">
-        <FormSelectCategory
-          title="Category"
-          categories={categories}
-          name="categoryCode"
-          defaultValue={formData.categoryCode}
-          placeholder="Select Category"
-        />
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput title="Activity Name" name="name" defaultValue={formData.name} placeholder="e.g. Starbucks" />
+          <FormInput title="Merchant" name="merchant" defaultValue={formData.merchant} placeholder="e.g. Starbucks Coffee" />
+        </div>
 
-        <FormSelectProject
-          title="Project"
-          projects={projects}
-          name="projectCode"
-          defaultValue={formData.projectCode}
-          placeholder="Select Project"
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <FormSelectCategory
+            title="Category"
+            categories={categories}
+            name="categoryCode"
+            defaultValue={formData.categoryCode}
+            placeholder="Select Category"
+          />
+          <FormSelectProject
+            title="Ledger"
+            projects={projects}
+            name="projectCode"
+            defaultValue={formData.projectCode}
+            placeholder="Select Ledger"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput title="Issued Date" type="date" name="issuedAt" defaultValue={formData.issuedAt} />
+          <FormSelectType title="Transaction Type" name="type" defaultValue={formData.type} />
+        </div>
+
+        <FormTextarea title="Additional Notes" name="note" defaultValue={formData.note} className="resize-none h-20" />
       </div>
 
-      <FormTextarea title="Note" name="note" defaultValue={formData.note} />
-
-      <div className="flex justify-between space-x-4 pt-6">
-        <Button type="button" variant="outline" className="aspect-square">
-          <Link href="/import/csv">
-            <Import className="h-4 w-4" />
-          </Link>
-        </Button>
-
-        <Button type="submit" disabled={isCreating}>
+      <div className="flex flex-col gap-3 pt-4">
+        <Button 
+          type="submit" 
+          disabled={isCreating} 
+          className="w-full h-14 text-sm font-bold uppercase tracking-widest bg-white text-black hover:bg-white/90"
+        >
           {isCreating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating...
+              Recording...
             </>
           ) : (
-            "Create and Add Files"
+            "Record Transaction"
           )}
         </Button>
+        
+        <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">
+          Transactions are automatically analyzed by AI
+        </p>
       </div>
 
       {createState?.error && <FormError>{createState.error}</FormError>}

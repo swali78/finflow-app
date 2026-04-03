@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { calcNetTotalPerCurrency, calcTotalPerCurrency, isTransactionIncomplete } from "@/lib/stats"
 import { cn, formatCurrency } from "@/lib/utils"
 import { Category, Field, Project, Transaction } from "@/prisma/client"
-import { formatDate } from "date-fns"
+import { formatDate, isToday, isYesterday, startOfDay } from "date-fns"
 import { ArrowDownIcon, ArrowUpIcon, File } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
@@ -27,24 +27,32 @@ type FieldWithRenderer = Field & {
 
 export const standardFieldRenderers: Record<string, FieldRenderer> = {
   name: {
-    name: "Name",
+    name: "Activity",
     code: "name",
-    classes: "font-medium min-w-[120px] max-w-[300px] overflow-hidden",
+    classes: "font-black min-w-[200px] max-w-[400px] overflow-hidden uppercase italic tracking-tighter text-xs",
     sortable: true,
-  },
-  merchant: {
-    name: "Merchant",
-    code: "merchant",
-    classes: "min-w-[120px] max-w-[250px] overflow-hidden",
-    sortable: true,
+    formatValue: (transaction: Transaction & { category?: Category }) => (
+      <div className="flex items-center gap-3">
+        <div 
+          className="h-8 w-8 rounded-full flex items-center justify-center shrink-0" 
+          style={{ backgroundColor: transaction.category?.color ? `${transaction.category.color}20` : 'rgba(255,255,255,0.1)' }}
+        >
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: transaction.category?.color || '#FFFFFF' }} />
+        </div>
+        <div className="flex flex-col">
+          <span className="truncate">{transaction.merchant || transaction.name || "Untitled Activity"}</span>
+          <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest leading-none mt-0.5">{transaction.category?.name || "General"}</span>
+        </div>
+      </div>
+    )
   },
   issuedAt: {
     name: "Date",
     code: "issuedAt",
-    classes: "min-w-[100px]",
+    classes: "min-w-[100px] text-[10px] uppercase font-bold tracking-[0.2em] text-muted-foreground",
     sortable: true,
     formatValue: (transaction: Transaction) =>
-      transaction.issuedAt ? formatDate(transaction.issuedAt, "yyyy-MM-dd") : "",
+      transaction.issuedAt ? formatDate(transaction.issuedAt, "MMM dd, yyyy") : "",
   },
   projectCode: {
     name: "Project",
@@ -52,36 +60,12 @@ export const standardFieldRenderers: Record<string, FieldRenderer> = {
     sortable: true,
     formatValue: (transaction: Transaction & { project: Project }) =>
       transaction.projectCode ? (
-        <Badge className="whitespace-nowrap" style={{ backgroundColor: transaction.project?.color }}>
+        <Badge className="whitespace-nowrap rounded-none border-white/10 uppercase text-[9px] tracking-widest font-bold bg-white/5 text-white" style={{ borderLeft: `2px solid ${transaction.project?.color || '#FFF'}` }}>
           {transaction.project?.name || ""}
         </Badge>
       ) : (
         "-"
       ),
-  },
-  categoryCode: {
-    name: "Category",
-    code: "categoryCode",
-    sortable: true,
-    formatValue: (transaction: Transaction & { category: Category }) =>
-      transaction.categoryCode ? (
-        <Badge className="whitespace-nowrap" style={{ backgroundColor: transaction.category?.color }}>
-          {transaction.category?.name || ""}
-        </Badge>
-      ) : (
-        "-"
-      ),
-  },
-  files: {
-    name: "Files",
-    code: "files",
-    sortable: false,
-    formatValue: (transaction: Transaction) => (
-      <div className="flex items-center gap-2 text-sm">
-        <File className="w-4 h-4" />
-        {(transaction.files as string[]).length}
-      </div>
-    ),
   },
   total: {
     name: "Total",
@@ -89,14 +73,14 @@ export const standardFieldRenderers: Record<string, FieldRenderer> = {
     classes: "text-right",
     sortable: true,
     formatValue: (transaction: Transaction) => (
-      <div className="text-right text-lg">
+      <div className="text-right">
         <div
           className={cn(
-            { income: "text-green-500", expense: "text-red-500", other: "text-black" }[transaction.type || "other"],
-            "flex flex-col justify-end"
+            { income: "text-emerald-500", expense: "text-white", other: "text-white" }[transaction.type || "other"],
+            "flex flex-col justify-end font-mono text-sm leading-none"
           )}
         >
-          <span>
+          <span className="font-bold">
             {transaction.total && transaction.currencyCode
               ? formatCurrency(transaction.total, transaction.currencyCode)
               : transaction.total}
@@ -104,8 +88,8 @@ export const standardFieldRenderers: Record<string, FieldRenderer> = {
           {transaction.convertedTotal &&
             transaction.convertedCurrencyCode &&
             transaction.convertedCurrencyCode !== transaction.currencyCode && (
-              <span className="text-sm -mt-1">
-                ({formatCurrency(transaction.convertedTotal, transaction.convertedCurrencyCode)})
+              <span className="text-[9px] opacity-40 uppercase tracking-tighter mt-0.5">
+                {formatCurrency(transaction.convertedTotal, transaction.convertedCurrencyCode)}
               </span>
             )}
         </div>
@@ -113,57 +97,20 @@ export const standardFieldRenderers: Record<string, FieldRenderer> = {
     ),
     footerValue: (transactions: Transaction[]) => {
       const netTotalPerCurrency = calcNetTotalPerCurrency(transactions)
-      const turnoverPerCurrency = calcTotalPerCurrency(transactions)
-
       return (
-        <div className="flex flex-col gap-3 text-right">
-          <dl className="space-y-1">
-            <dt className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Net Total</dt>
-            {Object.entries(netTotalPerCurrency).map(([currency, total]) => (
-              <dd
-                key={`net-${currency}`}
-                className={cn("text-sm first:text-base font-medium", total >= 0 ? "text-green-600" : "text-red-600")}
-              >
+        <div className="flex flex-col gap-1 text-right">
+          {Object.entries(netTotalPerCurrency).map(([currency, total]) => (
+            <div key={`net-${currency}`} className="flex flex-col">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Net Flow</span>
+              <span className={cn("text-sm font-mono font-bold", total >= 0 ? "text-emerald-500" : "text-white")}>
                 {formatCurrency(total, currency)}
-              </dd>
-            ))}
-          </dl>
-          <dl className="space-y-1">
-            <dt className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Turnover</dt>
-            {Object.entries(turnoverPerCurrency).map(([currency, total]) => (
-              <dd key={`turnover-${currency}`} className="text-sm text-muted-foreground">
-                {formatCurrency(total, currency)}
-              </dd>
-            ))}
-          </dl>
+              </span>
+            </div>
+          ))}
         </div>
       )
     },
-  },
-  convertedTotal: {
-    name: "Converted Total",
-    code: "convertedTotal",
-    classes: "text-right",
-    sortable: true,
-    formatValue: (transaction: Transaction) => (
-      <div
-        className={cn(
-          { income: "text-green-500", expense: "text-red-500", other: "text-black" }[transaction.type || "other"],
-          "flex flex-col justify-end text-right text-lg"
-        )}
-      >
-        {transaction.convertedTotal && transaction.convertedCurrencyCode
-          ? formatCurrency(transaction.convertedTotal, transaction.convertedCurrencyCode)
-          : transaction.convertedTotal}
-      </div>
-    ),
-  },
-  currencyCode: {
-    name: "Currency",
-    code: "currencyCode",
-    classes: "text-right",
-    sortable: true,
-  },
+  }
 }
 
 const getFieldRenderer = (field: Field): FieldRenderer => {
@@ -228,16 +175,11 @@ export function TransactionList({ transactions, fields = [] }: { transactions: T
 
   const handleSort = (field: string) => {
     let newDirection: "asc" | "desc" | null = "asc"
-
     if (sorting.field === field) {
       if (sorting.direction === "asc") newDirection = "desc"
       else if (sorting.direction === "desc") newDirection = null
     }
-
-    setSorting({
-      field: newDirection ? field : null,
-      direction: newDirection,
-    })
+    setSorting({ field: newDirection ? field : null, direction: newDirection })
   }
 
   const renderFieldInTable = (transaction: Transaction, field: FieldWithRenderer): string | React.ReactNode => {
@@ -264,18 +206,41 @@ export function TransactionList({ transactions, fields = [] }: { transactions: T
   const getSortIcon = (field: string) => {
     if (sorting.field !== field) return null
     return sorting.direction === "asc" ? (
-      <ArrowUpIcon className="w-4 h-4 ml-1 inline" />
+      <ArrowUpIcon className="w-3 h-3 ml-1 inline opacity-50" />
     ) : sorting.direction === "desc" ? (
-      <ArrowDownIcon className="w-4 h-4 ml-1 inline" />
+      <ArrowDownIcon className="w-3 h-3 ml-1 inline opacity-50" />
     ) : null
   }
 
+  // Grouping Logic for "Live" Figma Design
+  const groupedTransactions = useMemo(() => {
+    const groups: { label: string; transactions: Transaction[] }[] = []
+    let currentLabel = ""
+
+    transactions.forEach((t) => {
+      let label = "Earlier"
+      if (t.issuedAt) {
+        if (isToday(t.issuedAt)) label = "Today"
+        else if (isYesterday(t.issuedAt)) label = "Yesterday"
+        else label = formatDate(t.issuedAt, "MMMM yyyy")
+      }
+
+      if (label !== currentLabel) {
+        groups.push({ label, transactions: [t] })
+        currentLabel = label
+      } else {
+        groups[groups.length - 1].transactions.push(t)
+      }
+    })
+    return groups
+  }, [transactions])
+
   return (
-    <div className="rounded-md border">
+    <div className="rounded-none border border-white/5 bg-transparent overflow-hidden">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-[30px] select-none">
+        <TableHeader className="bg-white/[0.02]">
+          <TableRow className="border-b border-white/10 hover:bg-transparent">
+            <TableHead className="w-[40px] select-none text-center">
               <Checkbox checked={selectedIds.length === transactions.length} onCheckedChange={toggleAllRows} />
             </TableHead>
             {visibleFields.map((field) => (
@@ -283,7 +248,8 @@ export function TransactionList({ transactions, fields = [] }: { transactions: T
                 key={field.code}
                 className={cn(
                   field.renderer.classes,
-                  field.renderer.sortable && "hover:cursor-pointer hover:bg-accent select-none"
+                  "text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground",
+                  field.renderer.sortable && "hover:cursor-pointer hover:text-white transition-colors select-none"
                 )}
                 onClick={() => field.renderer.sortable && handleSort(field.code)}
               >
@@ -294,35 +260,46 @@ export function TransactionList({ transactions, fields = [] }: { transactions: T
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.map((transaction) => (
-            <TableRow
-              key={transaction.id}
-              className={cn(
-                isTransactionIncomplete(fields, transaction) && "bg-yellow-50",
-                selectedIds.includes(transaction.id) && "bg-muted",
-                "cursor-pointer hover:bg-muted/50"
-              )}
-              onClick={() => handleRowClick(transaction.id)}
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Checkbox
-                  checked={selectedIds.includes(transaction.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked !== "indeterminate") {
-                      toggleOneRow({ stopPropagation: () => {} } as React.MouseEvent, transaction.id)
-                    }
-                  }}
-                />
-              </TableCell>
-              {visibleFields.map((field) => (
-                <TableCell key={field.code} className={field.renderer.classes}>
-                  {renderFieldInTable(transaction, field)}
+          {groupedTransactions.map((group) => (
+            <React.Fragment key={group.label}>
+              <TableRow className="bg-white/[0.03] hover:bg-white/[0.03] border-none">
+                <TableCell colSpan={visibleFields.length + 1} className="py-2 px-4">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground opacity-50">
+                    {group.label}
+                  </span>
                 </TableCell>
+              </TableRow>
+              {group.transactions.map((transaction) => (
+                <TableRow
+                  key={transaction.id}
+                  className={cn(
+                    isTransactionIncomplete(fields, transaction) && "border-l-2 border-l-emerald-500/50",
+                    selectedIds.includes(transaction.id) && "bg-white/10",
+                    "cursor-pointer hover:bg-white/[0.02] border-b border-white/5 transition-all group"
+                  )}
+                  onClick={() => handleRowClick(transaction.id)}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()} className="text-center">
+                    <Checkbox
+                      checked={selectedIds.includes(transaction.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked !== "indeterminate") {
+                          toggleOneRow({ stopPropagation: () => {} } as React.MouseEvent, transaction.id)
+                        }
+                      }}
+                    />
+                  </TableCell>
+                  {visibleFields.map((field) => (
+                    <TableCell key={field.code} className={cn(field.renderer.classes, "py-4")}>
+                      {renderFieldInTable(transaction, field)}
+                    </TableCell>
+                  ))}
+                </TableRow>
               ))}
-            </TableRow>
+            </React.Fragment>
           ))}
         </TableBody>
-        <TableFooter>
+        <TableFooter className="bg-background border-t border-white/10">
           <TableRow>
             <TableCell></TableCell>
             {visibleFields.map((field) => (
@@ -339,3 +316,5 @@ export function TransactionList({ transactions, fields = [] }: { transactions: T
     </div>
   )
 }
+
+import React from "react"

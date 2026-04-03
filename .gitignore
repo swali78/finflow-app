@@ -37,10 +37,16 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
-.env
+.env*
+.env.local
+.env.production
+.env.test
 
-# vercel
-.vercel
+# local data
+/data/
+/public/uploads/
+/public/files/
+/storage/
 
 # typescript
 *.tsbuildinfo

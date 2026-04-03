@@ -2,6 +2,8 @@ import { SubscriptionExpired } from "@/components/auth/subscription-expired"
 import ScreenDropArea from "@/components/files/screen-drop-area"
 import MobileMenu from "@/components/sidebar/mobile-menu"
 import { AppSidebar } from "@/components/sidebar/sidebar"
+import { BottomNav } from "@/components/navigation/BottomNav"
+import { PageTransition } from "@/components/navigation/page-transition"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
 import { getCurrentUser, isSubscriptionExpired } from "@/lib/auth"
@@ -13,7 +15,7 @@ import { NotificationProvider } from "./context"
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | TaxHacker",
+    template: "%s | FinFlow",
     default: config.app.title,
   },
   description: config.app.description,
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#1E40AF",
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -54,10 +56,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             unsortedFilesCount={unsortedFilesCount}
             isSelfHosted={config.selfHosted.isEnabled}
           />
-          <SidebarInset className="w-full h-full mt-[60px] md:mt-0 overflow-auto">
+          <SidebarInset className="w-full h-full mt-[60px] md:mt-0 overflow-auto pb-16 md:pb-0">
             {isSubscriptionExpired(user) && <SubscriptionExpired />}
             {children}
           </SidebarInset>
+          <BottomNav />
         </SidebarProvider>
         <Toaster />
       </ScreenDropArea>
